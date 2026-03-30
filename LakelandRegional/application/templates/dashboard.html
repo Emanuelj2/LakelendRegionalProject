@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SPD Cart Logger{% endblock %}
+
+{% block content %}
+<style>
+  .summary-card {
+    border-radius: 10px;
+    padding: 20px 24px;
+    color: #fff;
+    font-weight: 600;
+  }
+  .card-available  { background: #1a5fa8; }
+  .card-inuse      { background: #e67e22; }
+  .card-maintenance{ background: #c0392b; }
+
+  .summary-card .count {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .summary-card .label {
+    font-size: 13px;
+    opacity: 0.85;
+    margin-top: 4px;
+  }
+
+  .badge-available   { background:#d4edda; color:#155724; border-radius:6px; padding:3px 10px; font-size:12px; font-weight:600; }
+  .badge-in_use      { background:#fff3cd; color:#856404; border-radius:6px; padding:3px 10px; font-size:12px; font-weight:600; }
+  .badge-maintenance { background:#f8d7da; color:#721c24; border-radius:6px; padding:3px 10px; font-size:12px; font-weight:600; }
+
+  .carts-table th { background: #1a5fa8; color: #fff; font-weight: 600; }
+  .carts-table td, .carts-table th { vertical-align: middle; }
+</style>
+
+<div class="container mt-4">
+  <h2 class="mb-4">Cart Tracking Dashboard</h2>
+
+  <!-- ── Summary Cards ── -->
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3">
+      <div class="summary-card card-available">
+        <div class="count">{{ available_count }}</div>
+        <div class="label">Available</div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="summary-card card-inuse">
+        <div class="count">{{ in_use_count }}</div>
+        <div class="label">In Use</div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="summary-card card-maintenance">
+        <div class="count">{{ maintenance_count }}</div>
+        <div class="label">Maintenance</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Carts Table ── -->
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table carts-table mb-0">
+        <thead>
+          <tr>
+            <th>Cart Name</th>
+            <th>RFID Tag</th>
+            <th>Status</th>
+            <th>Current Location</th>
+            <th>Last Seen</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cart in carts %}
+          <tr>
+            <td><strong>{{ cart.name }}</strong></td>
+            <td><code>{{ cart.rfid_tag }}</code></td>
+            <td><span class="badge-{{ cart.status }}">{{ cart.get_status_display }}</span></td>
+            <td>{{ cart.current_location.name|default:"Unknown" }}</td>
+            <td>{{ cart.last_seen|date:"M d, Y  H:i" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center text-muted py-4">
+              No carts found. Run <code>python manage.py seed_data</code> to add dummy data.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

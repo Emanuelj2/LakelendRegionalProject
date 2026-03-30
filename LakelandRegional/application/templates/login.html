@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Login - SPD Cart Logger{% endblock %}
+
+{% block content %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
+
+  /* ── Hide the base navbar on this page only ── */
+  .navbar { display: none !important; }
+
+  /* ── Reset container padding injected by base.html ── */
+  body > .container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: #f0f4f8;
+    margin: 0;
+  }
+
+  /* ── Top header bar ── */
+  .spd-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 32px;
+    background: #fff;
+    border-bottom: 1px solid #dde3ea;
+  }
+
+  .spd-header .logo-img {
+    height: 52px;
+    width: auto;
+    display: block;
+  }
+
+  .spd-header .app-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: 0.01em;
+  }
+
+  /* ── Full-page blue background ── */
+  .spd-page {
+    min-height: calc(100vh - 73px);
+    background: #c8d9ec;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 16px;
+  }
+
+  /* ── Login card ── */
+  .login-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 44px 40px 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 4px 24px rgba(26, 95, 168, 0.10);
+  }
+
+  .login-card h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 28px;
+    text-align: center;
+  }
+
+  .field-group {
+    margin-bottom: 20px;
+  }
+
+  .field-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a5fa8;
+    margin-bottom: 6px;
+  }
+
+  .field-group .input-wrap {
+    position: relative;
+  }
+
+  .field-group input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #ccd6e0;
+    border-radius: 6px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #1a1a2e;
+    background: #fff;
+    transition: border-color 0.18s;
+    outline: none;
+    box-shadow: none !important;
+  }
+
+  .field-group input:focus {
+    border-color: #1a5fa8 !important;
+    box-shadow: 0 0 0 3px rgba(26, 95, 168, 0.12) !important;
+  }
+
+  input[type="password"] { padding-right: 40px; }
+
+  .toggle-pw {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #8a9bb0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .toggle-pw:hover { color: #1a5fa8; }
+
+  /* ── Footer row ── */
+  .login-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 28px;
+  }
+
+  .admin-link {
+    font-size: 13px;
+    color: #1a1a2e;
+    text-decoration: none;
+    opacity: 0.70;
+    transition: opacity 0.15s;
+  }
+
+  .admin-link:hover { opacity: 1; text-decoration: underline; }
+
+  .btn-login {
+    background: #1a5fa8;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 32px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.18s, box-shadow 0.18s;
+  }
+
+  .btn-login:hover {
+    background: #154d8c;
+    box-shadow: 0 2px 10px rgba(26, 95, 168, 0.25);
+  }
+
+  /* ── Error messages ── */
+  .errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 0;
+    color: #c0392b;
+    font-size: 13px;
+  }
+
+  .alert-error {
+    background: #fdf0ef;
+    border: 1px solid #f5c6c2;
+    color: #c0392b;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+</style>
+
+<!-- ── Header ── -->
+<header class="spd-header">
+  <a href="/">
+  <img src="{% static 'images/LakelandRegionalHealthLogo.png' %}" alt="Lakeland Regional Health" class="logo-img">
+  </a>
+  <div class="app-title">SPD Cart Logger</div>
+</header>
+
+<!-- ── Blue page area ── -->
+<div class="spd-page">
+  <div class="login-card">
+    <h1>Log in</h1>
+
+    {% if form.non_field_errors %}
+      <div class="alert-error">
+        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <!-- Username -->
+      <div class="field-group">
+        <label for="id_username">Username</label>
+        <input
+          type="text"
+          id="id_username"
+          name="username"
+          autocomplete="username"
+          value="{{ form.username.value|default:'' }}"
+          required
+        >
+        {% if form.username.errors %}
+          <ul class="errorlist">
+            {% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <!-- Password -->
+      <div class="field-group">
+        <label for="id_password">Password</label>
+        <div class="input-wrap">
+          <input
+            type="password"
+            id="id_password"
+            name="password"
+            autocomplete="current-password"
+            required
+          >
+          <button type="button" class="toggle-pw" aria-label="Toggle password visibility"
+                  onclick="togglePassword(this)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        {% if form.password.errors %}
+          <ul class="errorlist">
+            {% for e in form.password.errors %}<li>{{ e }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div class="login-footer">
+        <a href="/admin/" class="admin-link">Admin Login</a>
+        <button href="/dashboard/" type="submit" class="btn-login">Log in</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function togglePassword(btn) {
+    var input = document.getElementById('id_password');
+    var showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.innerHTML = showing
+      ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
+      : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  }
+</script>
+{% endblock %}
