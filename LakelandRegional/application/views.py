@@ -3,17 +3,24 @@
 
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
-from .models import Cart
+from .models import Cart, Location
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout as auth_logout
 
 
 
 # home page view
-def home(request):
-    return render(request, 'home.html')
+#def home(request):
+    #return render(request, 'home.html')
 
+
+
+#hard code string form tag for login (add to git ignore)
+
+#check it the tag is valid besed on the hardcoded cradentials
+# login
 
 # user login view
 def login(request):
@@ -27,6 +34,10 @@ def login(request):
     else:
         form = AuthenticationForm()
         return render(request, 'login.html', {'form': form})
+    
+def logout(request):
+    auth_logout(request)
+    return redirect('login')
 
 
 @login_required # only logged in users can access the dashboard
@@ -34,6 +45,7 @@ def dashboard(request):
     carts = Cart.objects.select_related('current_location').all() #the carts and their current locations
     return render(request, 'dashboard.html', {
         'carts': carts,
+        'locations': Location.objects.all(),
         'available_count':    carts.filter(status='available').count(),
         'in_use_count':       carts.filter(status='in_use').count(),
         'maintenance_count':  carts.filter(status='maintenance').count(),
@@ -51,14 +63,36 @@ def get_all_carts(request):
         'last_seen': str(c.last_seen),
     } for c in carts]})
 
-@login_required
-def search(request):
-    #TODO
-    pass
 
 
+
+#Emanuel
 @login_required
-def filter():
-    #TODO
-    pass
+def filter_carts(request):
+    location_id = request.GET.get('location')
+    status      = request.GET.get('status')
+    sort        = request.GET.get('sort')
+
+    carts = Cart.objects.select_related('current_location').all()
+
+    if location_id:
+        carts = carts.filter(current_location__id=location_id)
+    if status:
+        carts = carts.filter(status=status)
+    if sort == 'asc':
+        carts = carts.order_by('name')
+    elif sort == 'desc':
+        carts = carts.order_by('-name')
+
+    return JsonResponse({
+        'carts': [{
+            'id':           c.id,
+            'name':         c.name,
+            'rfid_tag':     c.rfid_tag,
+            'status_raw':   c.status,               # "in_use"  → used for CSS class
+            'status_label': c.get_status_display(), # "In Use"  → used for display text
+            'location':     c.current_location.name if c.current_location else 'Unknown',
+            'last_seen':    c.last_seen.isoformat() if c.last_seen else None,
+        } for c in carts]
+    })
 

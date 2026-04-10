@@ -34,7 +34,12 @@
 </style>
 
 <div class="container mt-4">
-  <h2 class="mb-4">Cart Tracking Dashboard</h2>
+  
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Cart Tracking Dashboard</h2>
+    <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">Sign out</a>
+  </div>
 
   <!-- ── Summary Cards ── -->
   <div class="row mb-4">
@@ -57,6 +62,40 @@
       </div>
     </div>
   </div>
+
+ <!-- ── Filters ── -->
+<div class="d-flex flex-wrap gap-2 align-items-end mb-3">
+  <div>
+    <label class="form-label mb-1 small">Location</label>
+    <select id="filterLocation" class="form-select form-select-sm" onchange="applyFilters()">
+      <option value="">All Locations</option>
+      {% for location in locations %}
+        <option value="{{ location.id }}">{{ location.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div>
+    <label class="form-label mb-1 small">Status</label>
+    <select id="filterStatus" class="form-select form-select-sm" onchange="applyFilters()">
+      <option value="">All Statuses</option>
+      <option value="available">Available</option>
+      <option value="in_use">In Use</option>
+      <option value="maintenance">Maintenance</option>
+    </select>
+  </div>
+
+  <div>
+    <label class="form-label mb-1 small">Sort by name</label>
+    <select id="filterSort" class="form-select form-select-sm" onchange="applyFilters()">
+      <option value="">Default</option>
+      <option value="asc">A → Z</option>
+      <option value="desc">Z → A</option>
+    </select>
+  </div>
+
+  <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()">↺ Reset</button>
+</div>
 
   <!-- ── Carts Table ── -->
   <div class="card shadow-sm">
@@ -92,4 +131,50 @@
     </div>
   </div>
 </div>
+
+
+<script>
+function applyFilters() {
+  const location = document.getElementById("filterLocation").value;
+  const status   = document.getElementById("filterStatus").value;
+  const sort     = document.getElementById("filterSort").value;
+
+  const params = new URLSearchParams();
+  if (location) params.append("location", location);
+  if (status)   params.append("status",   status);
+  if (sort)     params.append("sort",     sort);
+
+  fetch(`/api/filter-carts/?${params}`)
+    .then(r => r.json())
+    .then(data => {
+      const tbody = document.querySelector(".carts-table tbody");
+      tbody.innerHTML = "";
+
+      if (!data.carts.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No carts found.</td></tr>`;
+        return;
+      }
+
+      data.carts.forEach(cart => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><strong>${cart.name}</strong></td>
+          <td><code>${cart.rfid_tag || ''}</code></td>
+          <td><span class="badge-${cart.status_raw}">${cart.status_label}</span></td>
+          <td>${cart.location}</td>
+          <td>${cart.last_seen ? new Date(cart.last_seen).toLocaleString() : ''}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    })
+    .catch(err => console.error("Filter error:", err));
+}
+
+function resetFilters() {
+  document.getElementById("filterLocation").value = "";
+  document.getElementById("filterStatus").value   = "";
+  document.getElementById("filterSort").value     = "";
+  applyFilters();
+}
+</script>
 {% endblock %}
