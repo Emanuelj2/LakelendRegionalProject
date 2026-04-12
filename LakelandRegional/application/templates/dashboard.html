@@ -3,6 +3,7 @@
 {% block title %}Dashboard - SPD Cart Logger{% endblock %}
 
 {% block content %}
+
 <style>
   .summary-card {
     border-radius: 10px;
@@ -31,6 +32,30 @@
 
   .carts-table th { background: #1a5fa8; color: #fff; font-weight: 600; }
   .carts-table td, .carts-table th { vertical-align: middle; }
+
+  .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+  }
+
+  .hidden {
+      display: none;
+  }
+
+  .filter-panel {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 400px;
+  }
 </style>
 
 <div class="container mt-4">
@@ -56,6 +81,14 @@
         <div class="label">Maintenance</div>
       </div>
     </div>
+  </div>
+
+  <!-- ── Filter Button ── -->
+  <div>
+    <button id="openFilter">
+      {% include 'filter-icon.svg.html' %}
+    </button>
+    
   </div>
 
   <!-- ── Carts Table ── -->
@@ -91,5 +124,79 @@
       </table>
     </div>
   </div>
+
+  <!-- Overlay -->
+  <div id="filterOverlay" class="overlay hidden">
+      <div class="filter-panel">
+          <button id="closeFilter">X</button>
+
+          <form id="filterForm">
+              <div>
+                <button name="location" value="hallway1">Hallway 1</button>
+                <button name="location" value="hallway2">Hallway 2</button>
+                <button name="location" value="hallway3">Hallway 3</button>
+              </div>
+
+              <div>
+                <button name="location" value="washroom">Wash Room</button>
+                <button name="location" value="washhall">Wash Hall</button>
+                <button name="location" value="cleanroom">Clean Room</button>
+                <button name="location" value="storageroom">Storage Room</button>
+              </div>
+
+              <div>
+                <button name="time" value="30">Last 30 mins</button>
+                <button name="time" value="60">Last Hour</button>
+              </div>
+
+          </form>
+      </div>
+  </div>
 </div>
+
+<script>
+  const overlay = document.getElementById("filterOverlay");
+
+  document.getElementById("openFilter").onclick = () => {
+      overlay.classList.remove("hidden");
+  };
+
+  document.getElementById("closeFilter").onclick = () => {
+      overlay.classList.add("hidden");
+  };
+
+  document.getElementById("filterForm").onsubmit = async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const params = new URLSearchParams(formData);
+
+    fetch(`/api/filter-carts/?${params}`)
+      .then(r => r.json())
+      .then(data => {
+      const tbody = document.querySelector(".carts-table tbody");
+      tbody.innerHTML = "";
+
+      if (!data.carts.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No carts found.</td></tr>`;
+        return;
+      }
+
+      data.carts.forEach(cart => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><strong>${cart.name}</strong></td>
+          <td><code>${cart.rfid_tag || ''}</code></td>
+          <td><span class="badge-${cart.status_raw}">${cart.status_label}</span></td>
+          <td>${cart.location}</td>
+          <td>${cart.last_seen ? new Date(cart.last_seen).toLocaleString() : ''}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    })
+    .catch(err => console.error("Filter error:", err));
+
+    overlay.classList.add("hidden");
+  };
+</script>
 {% endblock %}
