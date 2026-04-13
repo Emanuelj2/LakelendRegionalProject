@@ -3,6 +3,7 @@
 {% block title %}Dashboard - SPD Cart Logger{% endblock %}
 
 {% block content %}
+
 <style>
   .summary-card {
     border-radius: 10px;
@@ -31,15 +32,34 @@
 
   .carts-table th { background: #1a5fa8; color: #fff; font-weight: 600; }
   .carts-table td, .carts-table th { vertical-align: middle; }
+
+  .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+  }
+
+  .hidden {
+      display: none;
+  }
+
+  .filter-panel {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 400px;
+  }
 </style>
 
 <div class="container mt-4">
-  
-
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">Cart Tracking Dashboard</h2>
-    <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">Sign out</a>
-  </div>
+  <h2 class="mb-4">Cart Tracking Dashboard</h2>
 
   <!-- ── Summary Cards ── -->
   <div class="row mb-4">
@@ -63,39 +83,13 @@
     </div>
   </div>
 
- <!-- ── Filters ── -->
-<div class="d-flex flex-wrap gap-2 align-items-end mb-3">
-  <div>
-    <label class="form-label mb-1 small">Location</label>
-    <select id="filterLocation" class="form-select form-select-sm" onchange="applyFilters()">
-      <option value="">All Locations</option>
-      {% for location in locations %}
-        <option value="{{ location.id }}">{{ location.name }}</option>
-      {% endfor %}
-    </select>
+  <!-- ── Filter Button ── -->
+  <div class="filter-button">
+    <button id="openFilter">
+      {% include 'filter-icon.svg.html' %}
+    </button>
+    
   </div>
-
-  <div>
-    <label class="form-label mb-1 small">Status</label>
-    <select id="filterStatus" class="form-select form-select-sm" onchange="applyFilters()">
-      <option value="">All Statuses</option>
-      <option value="available">Available</option>
-      <option value="in_use">In Use</option>
-      <option value="maintenance">Maintenance</option>
-    </select>
-  </div>
-
-  <div>
-    <label class="form-label mb-1 small">Sort by name</label>
-    <select id="filterSort" class="form-select form-select-sm" onchange="applyFilters()">
-      <option value="">Default</option>
-      <option value="asc">A → Z</option>
-      <option value="desc">Z → A</option>
-    </select>
-  </div>
-
-  <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()">↺ Reset</button>
-</div>
 
   <!-- ── Carts Table ── -->
   <div class="card shadow-sm">
@@ -130,23 +124,56 @@
       </table>
     </div>
   </div>
+
+  <!-- Overlay -->
+  <div id="filterOverlay" class="overlay hidden">
+      <div class="filter-panel">
+          <button id="closeFilter">X</button>
+
+          <form id="filterForm">
+              <div class="button-column">
+                <button name="location" value="hallway1">Hallway 1</button>
+                <button name="location" value="hallway2">Hallway 2</button>
+                <button name="location" value="hallway3">Hallway 3</button>
+              </div>
+
+              <div class="button-column">
+                <button name="location" value="washroom">Wash Room</button>
+                <button name="location" value="washhall">Wash Hall</button>
+                <button name="location" value="cleanroom">Clean Room</button>
+                <button name="location" value="storageroom">Storage Room</button>
+              </div>
+
+              <div class="button-column">
+                <button name="time" value="30">Last 30 mins</button>
+                <button name="time" value="60">Last Hour</button>
+              </div>
+
+          </form>
+      </div>
+  </div>
 </div>
 
-
 <script>
-function applyFilters() {
-  const location = document.getElementById("filterLocation").value;
-  const status   = document.getElementById("filterStatus").value;
-  const sort     = document.getElementById("filterSort").value;
+  const overlay = document.getElementById("filterOverlay");
 
-  const params = new URLSearchParams();
-  if (location) params.append("location", location);
-  if (status)   params.append("status",   status);
-  if (sort)     params.append("sort",     sort);
+  document.getElementById("openFilter").onclick = () => {
+      overlay.classList.remove("hidden");
+  };
 
-  fetch(`/api/filter-carts/?${params}`)
-    .then(r => r.json())
-    .then(data => {
+  document.getElementById("closeFilter").onclick = () => {
+      overlay.classList.add("hidden");
+  };
+
+  document.getElementById("filterForm").onsubmit = async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const params = new URLSearchParams(formData);
+
+    fetch(`/api/filter-carts/?${params}`)
+      .then(r => r.json())
+      .then(data => {
       const tbody = document.querySelector(".carts-table tbody");
       tbody.innerHTML = "";
 
@@ -168,13 +195,8 @@ function applyFilters() {
       });
     })
     .catch(err => console.error("Filter error:", err));
-}
 
-function resetFilters() {
-  document.getElementById("filterLocation").value = "";
-  document.getElementById("filterStatus").value   = "";
-  document.getElementById("filterSort").value     = "";
-  applyFilters();
-}
+    overlay.classList.add("hidden");
+  };
 </script>
 {% endblock %}

@@ -7,6 +7,5 @@ urlpatterns = [
     path("logout/", views.logout, name="logout"),
     path("dashboard/", views.dashboard, name="dashboard"),
     path("api/carts/", views.get_all_carts, name="get_carts"),
-    #path("api/filter-by-location/", views.filter_by_location, name="filter_by_location"),
-    path("api/filter-carts/", views.filter_carts, name="filter_carts"),  # ← this must exist
+    path("api/filter-carts/", views.filter_carts, name="filter_carts"),
 ]
