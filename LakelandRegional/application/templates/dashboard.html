@@ -84,7 +84,7 @@
   </div>
 
   <!-- ── Filter Button ── -->
-  <div>
+  <div class="filter-button">
     <button id="openFilter">
       {% include 'filter-icon.svg.html' %}
     </button>
@@ -131,20 +131,20 @@
           <button id="closeFilter">X</button>
 
           <form id="filterForm">
-              <div>
+              <div class="button-column">
                 <button name="location" value="hallway1">Hallway 1</button>
                 <button name="location" value="hallway2">Hallway 2</button>
                 <button name="location" value="hallway3">Hallway 3</button>
               </div>
 
-              <div>
+              <div class="button-column">
                 <button name="location" value="washroom">Wash Room</button>
                 <button name="location" value="washhall">Wash Hall</button>
                 <button name="location" value="cleanroom">Clean Room</button>
                 <button name="location" value="storageroom">Storage Room</button>
               </div>
 
-              <div>
+              <div class="button-column">
                 <button name="time" value="30">Last 30 mins</button>
                 <button name="time" value="60">Last Hour</button>
               </div>
