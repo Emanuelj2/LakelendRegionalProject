@@ -31,29 +31,29 @@
 
   .cart-name {
     font-weight: 700;
-    font-size: 18px;
+    font-size: 20px;
     min-width: 110px;
   }
 
   .loc-badge {
     padding: 8px 20px;
     border-radius: 8px;
-    font-size: 15px;
+    font-size: 18px;
     font-weight: 500;
     flex: 1;
     text-align: center;
   }
 
-  .loc-spd              { background: #B5D4F4; color: #0C447C; }
-  .loc-operatingroom1   { background: #D3D1C7; color: #2C2C2A; }
-  .loc-operatingroom2   { background: #D3D1C7; color: #2C2C2A; }
-  .loc-icu              { background: #f8d7da; color: #721c24; }
-  .loc-er               { background: #f8d7da; color: #721c24; }
-  .loc-storage          { background: #FAC775; color: #412402; }
-  .loc-unknown          { background: #e9ecef; color: #495057; }
+ .loc-hallway1    { background: #B8C2CC; color: #2C2C2A; }
+ .loc-hallway2    { background: #99ABBC; color: #2C2C2A; }
+ .loc-hallway3    { background: #738597; color: #262624; }
+ .loc-washroom    { background: #76B5F9; color: #0C447C; }
+ .loc-washhall    { background: #4575F0; color: #041323; }
+ .loc-cleanroom   { background: #DFC657; color: #222106; }
+ .loc-storageroom { background: #F8B563; color: #2f1a03; }
 
   .cart-time {
-    font-size: 14px;
+    font-size: 18px;
     color: #888;
     min-width: 160px;
     text-align: right;
@@ -106,11 +106,7 @@
     cursor: pointer;
     text-align: center;
   }
-  .fbtn-gray   { background: #D3D1C7; color: #2C2C2A; }
-  .fbtn-blue   { background: #378ADD; color: #fff; }
-  .fbtn-dgray  { background: #888780; color: #F1EFE8; }
-  .fbtn-amber  { background: #EF9F27; color: #412402; }
-  .fbtn-orange { background: #FAC775; color: #412402; }
+ 
   .fbtn-green  { background: #3B6D11; color: #EAF3DE; }
   .fbtn-dgreen { background: #27500A; color: #EAF3DE; }
   .fbtn.active { outline: 3px solid #333; }
@@ -128,17 +124,13 @@
   <!-- ── Cart List ── -->
   <div id="cartList">
     {% for cart in carts %}
-    {% with loc=cart.current_location.name|default:"unknown"|lower|cut:" " %}
     <div class="cart-row">
       <span class="cart-name">{{ cart.name }}</span>
-      <span class="loc-badge loc-{{ loc }}">
-        {{ cart.current_location.name|default:"Unknown" }}
-      </span>
+      <span class="loc-badge loc-{{ cart.current_location.name|default:"unknown" }}">{{ cart.current_location.get_name_display }}</span>
       <span class="cart-time">
-        {{ cart.last_seen|date:"H:i" }} &nbsp; {{ cart.last_seen|date:"M j, Y" }}
+      {{ cart.last_seen|date:"H:i:s" }} &nbsp; {{ cart.last_seen|date:"m/d/y" }}
       </span>
     </div>
-    {% endwith %}
     {% empty %}
     <p class="text-muted text-center py-4">
       No carts found. Run <code>python manage.py seed_data</code> to add data.
@@ -155,23 +147,25 @@
       Filter By:
       <button class="close-btn" id="closeFilter">✕</button>
     </div>
-    <div class="filter-grid">
-      <button class="fbtn fbtn-gray"   data-location="hallway1">Hallway 1</button>
-      <button class="fbtn fbtn-blue"   data-location="washroom">Wash Room</button>
-      <button class="fbtn fbtn-green"  data-time="30">Last 30 Mins</button>
 
-      <button class="fbtn fbtn-gray"   data-location="hallway2">Hallway 2</button>
-      <button class="fbtn fbtn-dgray"  data-location="washhall">Wash Hall</button>
-      <button class="fbtn fbtn-dgreen" data-time="60">Last Hour</button>
+      <form class ="filter-grid" id="filterForm">
+        <button class="fbtn loc-hallway1"   name="location" value="hallway1">Hallway 1</button>
+        <button class="fbtn loc-washroom"   name="location" value="washroom">Wash Room</button>
+        <button class="fbtn fbtn-green"     name="time"     value="30">Last 30 Mins</button>
 
-      <button class="fbtn fbtn-gray"   data-location="hallway3">Hallway 3</button>
-      <button class="fbtn fbtn-amber"  data-location="cleanroom">Clean Room</button>
-      <div></div>
+        <button class="fbtn loc-hallway2"   name="location" value="hallway2">Hallway 2</button>
+        <button class="fbtn loc-washhall"   name="location" value="washhall">Wash Hall</button>
+        <button class="fbtn fbtn-dgreen"    name="time"    value="60">Last Hour</button>
 
-      <div></div>
-      <button class="fbtn fbtn-orange" data-location="storageroom">Storage Room</button>
-      <div></div>
-    </div>
+        <button class="fbtn loc-hallway3"   name="location" value="hallway3">Hallway 3</button>
+        <button class="fbtn loc-cleanroom"  name="location" value="cleanroom">Clean Room</button>
+        <div></div>
+
+        <div></div>
+        <button class="fbtn loc-storageroom" name="location" value="storageroom">Storage Room</button>
+        <div></div>
+      </form>
+
   </div>
 </div>
 
@@ -180,36 +174,17 @@
   document.getElementById("openFilter").onclick = () => overlay.classList.remove("hidden");
   document.getElementById("closeFilter").onclick = () => overlay.classList.add("hidden");
 
-  let activeLocation = null;
-  let activeTime = null;
+  document.getElementById("filterForm").onsubmit = async (e) => {
+    e.preventDefault();
 
-  document.querySelectorAll(".fbtn[data-location]").forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll(".fbtn[data-location]").forEach(b => b.classList.remove("active"));
-      activeLocation = btn.dataset.location;
-      btn.classList.add("active");
-      applyFilters();
-    };
-  });
-
-  document.querySelectorAll(".fbtn[data-time]").forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll(".fbtn[data-time]").forEach(b => b.classList.remove("active"));
-      activeTime = btn.dataset.time;
-      btn.classList.add("active");
-      applyFilters();
-    };
-  });
-
-  function applyFilters() {
+    const submitter = e.submitter;
     const params = new URLSearchParams();
-    if (activeLocation) params.append("location", activeLocation);
-    if (activeTime)     params.append("time", activeTime);
+
+    if (submitter) params.append("filter", submitter.value);
 
     fetch(`/api/filter-carts/?${params}`)
       .then(r => r.json())
       .then(data => {
-        overlay.classList.add("hidden");
         const cartList = document.getElementById("cartList");
         cartList.innerHTML = "";
 
@@ -219,23 +194,24 @@
         }
 
         data.carts.forEach(cart => {
-          const loc = (cart.location || "unknown").toLowerCase().replace(/\s/g, "");
-          cartList.insertAdjacentHTML("beforeend", `
-            <div class="cart-row">
-              <span class="cart-name">${cart.name}</span>
-              <span class="loc-badge loc-${loc}">${cart.location}</span>
-              <span class="cart-time">
-                ${cart.last_seen
-                  ? new Date(cart.last_seen).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-                    + ' &nbsp; '
-                    + new Date(cart.last_seen).toLocaleDateString([], {month:'short', day:'numeric', year:'numeric'})
-                  : ''}
-              </span>
-            </div>
-          `);
+          const div = document.createElement("div");
+          div.className = "cart-row";
+
+          const dt = cart.last_seen ? new Date(cart.last_seen) : null;
+          const timeStr = dt ? dt.toLocaleTimeString('en-US', { hour12: false }) : '';
+          const dateStr = dt ? dt.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' }) : '';
+
+          div.innerHTML = `
+            <span class="cart-name">${cart.name}</span>
+            <span class="loc-badge loc-${cart.location_raw}">${cart.location_label}</span>
+            <span class="cart-time">${dt ? `${timeStr} &nbsp; ${dateStr}` : ''}</span>
+          `;
+          cartList.appendChild(div);
         });
       })
       .catch(err => console.error("Filter error:", err));
-  }
+
+    overlay.classList.add("hidden");
+  };
 </script>
 {% endblock %}
