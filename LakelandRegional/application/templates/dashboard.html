@@ -4,177 +4,214 @@
 
 {% block content %}
 <style>
-  .summary-card {
-    border-radius: 10px;
+  .top-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+  }
+
+  .filter-btn {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+  }
+
+  .cart-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
     padding: 20px 24px;
-    color: #fff;
-    font-weight: 600;
+    margin-bottom: 12px;
   }
-  .card-available  { background: #1a5fa8; }
-  .card-inuse      { background: #e67e22; }
-  .card-maintenance{ background: #c0392b; }
 
-  .summary-card .count {
-    font-size: 36px;
+  .cart-name {
     font-weight: 700;
-    line-height: 1;
-  }
-  .summary-card .label {
-    font-size: 13px;
-    opacity: 0.85;
-    margin-top: 4px;
+    font-size: 20px;
+    min-width: 110px;
   }
 
-  .badge-available   { background:#d4edda; color:#155724; border-radius:6px; padding:3px 10px; font-size:12px; font-weight:600; }
-  .badge-in_use      { background:#fff3cd; color:#856404; border-radius:6px; padding:3px 10px; font-size:12px; font-weight:600; }
-  .badge-maintenance { background:#f8d7da; color:#721c24; border-radius:6px; padding:3px 10px; font-size:12px; font-weight:600; }
+  .loc-badge {
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 500;
+    flex: 1;
+    text-align: center;
+  }
 
-  .carts-table th { background: #1a5fa8; color: #fff; font-weight: 600; }
-  .carts-table td, .carts-table th { vertical-align: middle; }
+ .loc-hallway1    { background: #B8C2CC; color: #2C2C2A; }
+ .loc-hallway2    { background: #99ABBC; color: #2C2C2A; }
+ .loc-hallway3    { background: #738597; color: #262624; }
+ .loc-washroom    { background: #76B5F9; color: #0C447C; }
+ .loc-washhall    { background: #4575F0; color: #041323; }
+ .loc-cleanroom   { background: #DFC657; color: #222106; }
+ .loc-storageroom { background: #F8B563; color: #2f1a03; }
+
+  .cart-time {
+    font-size: 18px;
+    color: #888;
+    min-width: 160px;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  .hidden { display: none; }
+
+  .filter-panel {
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px;
+    width: 480px;
+    max-width: 95vw;
+  }
+  .filter-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 20px;
+  }
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+  }
+  .filter-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .fbtn {
+    padding: 14px 8px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+  }
+ 
+  .fbtn-green  { background: #3B6D11; color: #EAF3DE; }
+  .fbtn-dgreen { background: #27500A; color: #EAF3DE; }
+  .fbtn.active { outline: 3px solid #333; }
 </style>
 
 <div class="container mt-4">
-  
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">Cart Tracking Dashboard</h2>
-    <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">Sign out</a>
+  <!-- ── Filter Button top right ── -->
+  <div class="filter-button">
+    <button id="openFilter">
+      {% include 'filter-icon.svg.html' %}
+    </button>
   </div>
 
-  <!-- ── Summary Cards ── -->
-  <div class="row mb-4">
-    <div class="col-md-4 mb-3">
-      <div class="summary-card card-available">
-        <div class="count">{{ available_count }}</div>
-        <div class="label">Available</div>
-      </div>
+  <!-- ── Cart List ── -->
+  <div id="cartList">
+    {% for cart in carts %}
+    <div class="cart-row">
+      <span class="cart-name">{{ cart.name }}</span>
+      <span class="loc-badge loc-{{ cart.current_location.name|default:"unknown" }}">{{ cart.current_location.get_name_display }}</span>
+      <span class="cart-time">
+      {{ cart.last_seen|date:"H:i:s" }} &nbsp; {{ cart.last_seen|date:"m/d/y" }}
+      </span>
     </div>
-    <div class="col-md-4 mb-3">
-      <div class="summary-card card-inuse">
-        <div class="count">{{ in_use_count }}</div>
-        <div class="label">In Use</div>
-      </div>
-    </div>
-    <div class="col-md-4 mb-3">
-      <div class="summary-card card-maintenance">
-        <div class="count">{{ maintenance_count }}</div>
-        <div class="label">Maintenance</div>
-      </div>
-    </div>
+    {% empty %}
+    <p class="text-muted text-center py-4">
+      No carts found. Run <code>python manage.py seed_data</code> to add data.
+    </p>
+    {% endfor %}
   </div>
 
- <!-- ── Filters ── -->
-<div class="d-flex flex-wrap gap-2 align-items-end mb-3">
-  <div>
-    <label class="form-label mb-1 small">Location</label>
-    <select id="filterLocation" class="form-select form-select-sm" onchange="applyFilters()">
-      <option value="">All Locations</option>
-      {% for location in locations %}
-        <option value="{{ location.id }}">{{ location.name }}</option>
-      {% endfor %}
-    </select>
-  </div>
-
-  <div>
-    <label class="form-label mb-1 small">Status</label>
-    <select id="filterStatus" class="form-select form-select-sm" onchange="applyFilters()">
-      <option value="">All Statuses</option>
-      <option value="available">Available</option>
-      <option value="in_use">In Use</option>
-      <option value="maintenance">Maintenance</option>
-    </select>
-  </div>
-
-  <div>
-    <label class="form-label mb-1 small">Sort by name</label>
-    <select id="filterSort" class="form-select form-select-sm" onchange="applyFilters()">
-      <option value="">Default</option>
-      <option value="asc">A → Z</option>
-      <option value="desc">Z → A</option>
-    </select>
-  </div>
-
-  <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()">↺ Reset</button>
 </div>
 
-  <!-- ── Carts Table ── -->
-  <div class="card shadow-sm">
-    <div class="card-body p-0">
-      <table class="table carts-table mb-0">
-        <thead>
-          <tr>
-            <th>Cart Name</th>
-            <th>RFID Tag</th>
-            <th>Status</th>
-            <th>Current Location</th>
-            <th>Last Seen</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for cart in carts %}
-          <tr>
-            <td><strong>{{ cart.name }}</strong></td>
-            <td><code>{{ cart.rfid_tag }}</code></td>
-            <td><span class="badge-{{ cart.status }}">{{ cart.get_status_display }}</span></td>
-            <td>{{ cart.current_location.name|default:"Unknown" }}</td>
-            <td>{{ cart.last_seen|date:"M d, Y  H:i" }}</td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="5" class="text-center text-muted py-4">
-              No carts found. Run <code>python manage.py seed_data</code> to add dummy data.
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+<!-- ── Filter Overlay ── -->
+<div id="filterOverlay" class="overlay hidden">
+  <div class="filter-panel">
+    <div class="filter-title">
+      Filter By:
+      <button class="close-btn" id="closeFilter">✕</button>
     </div>
+
+      <form class ="filter-grid" id="filterForm">
+        <button class="fbtn loc-hallway1"   name="location" value="hallway1">Hallway 1</button>
+        <button class="fbtn loc-washroom"   name="location" value="washroom">Wash Room</button>
+        <button class="fbtn fbtn-green"     name="time"     value="30">Last 30 Mins</button>
+
+        <button class="fbtn loc-hallway2"   name="location" value="hallway2">Hallway 2</button>
+        <button class="fbtn loc-washhall"   name="location" value="washhall">Wash Hall</button>
+        <button class="fbtn fbtn-dgreen"    name="time"    value="60">Last Hour</button>
+
+        <button class="fbtn loc-hallway3"   name="location" value="hallway3">Hallway 3</button>
+        <button class="fbtn loc-cleanroom"  name="location" value="cleanroom">Clean Room</button>
+        <div></div>
+
+        <div></div>
+        <button class="fbtn loc-storageroom" name="location" value="storageroom">Storage Room</button>
+        <div></div>
+      </form>
+
   </div>
 </div>
-
 
 <script>
-function applyFilters() {
-  const location = document.getElementById("filterLocation").value;
-  const status   = document.getElementById("filterStatus").value;
-  const sort     = document.getElementById("filterSort").value;
+  const overlay = document.getElementById("filterOverlay");
+  document.getElementById("openFilter").onclick = () => overlay.classList.remove("hidden");
+  document.getElementById("closeFilter").onclick = () => overlay.classList.add("hidden");
 
-  const params = new URLSearchParams();
-  if (location) params.append("location", location);
-  if (status)   params.append("status",   status);
-  if (sort)     params.append("sort",     sort);
+  document.getElementById("filterForm").onsubmit = async (e) => {
+    e.preventDefault();
 
-  fetch(`/api/filter-carts/?${params}`)
-    .then(r => r.json())
-    .then(data => {
-      const tbody = document.querySelector(".carts-table tbody");
-      tbody.innerHTML = "";
+    const submitter = e.submitter;
+    const params = new URLSearchParams();
 
-      if (!data.carts.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No carts found.</td></tr>`;
-        return;
-      }
+    if (submitter) params.append("filter", submitter.value);
 
-      data.carts.forEach(cart => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td><strong>${cart.name}</strong></td>
-          <td><code>${cart.rfid_tag || ''}</code></td>
-          <td><span class="badge-${cart.status_raw}">${cart.status_label}</span></td>
-          <td>${cart.location}</td>
-          <td>${cart.last_seen ? new Date(cart.last_seen).toLocaleString() : ''}</td>
-        `;
-        tbody.appendChild(row);
-      });
-    })
-    .catch(err => console.error("Filter error:", err));
-}
+    fetch(`/api/filter-carts/?${params}`)
+      .then(r => r.json())
+      .then(data => {
+        const cartList = document.getElementById("cartList");
+        cartList.innerHTML = "";
 
-function resetFilters() {
-  document.getElementById("filterLocation").value = "";
-  document.getElementById("filterStatus").value   = "";
-  document.getElementById("filterSort").value     = "";
-  applyFilters();
-}
+        if (!data.carts.length) {
+          cartList.innerHTML = `<p class="text-muted text-center py-4">No carts found.</p>`;
+          return;
+        }
+
+        data.carts.forEach(cart => {
+          const div = document.createElement("div");
+          div.className = "cart-row";
+
+          const dt = cart.last_seen ? new Date(cart.last_seen) : null;
+          const timeStr = dt ? dt.toLocaleTimeString('en-US', { hour12: false }) : '';
+          const dateStr = dt ? dt.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' }) : '';
+
+          div.innerHTML = `
+            <span class="cart-name">${cart.name}</span>
+            <span class="loc-badge loc-${cart.location_raw}">${cart.location_label}</span>
+            <span class="cart-time">${dt ? `${timeStr} &nbsp; ${dateStr}` : ''}</span>
+          `;
+          cartList.appendChild(div);
+        });
+      })
+      .catch(err => console.error("Filter error:", err));
+
+    overlay.classList.add("hidden");
+  };
 </script>
 {% endblock %}

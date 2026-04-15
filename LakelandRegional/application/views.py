@@ -8,19 +8,9 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout as auth_logout
+from django.utils import timezone
+from datetime import timedelta
 
-
-
-# home page view
-#def home(request):
-    #return render(request, 'home.html')
-
-
-
-#hard code string form tag for login (add to git ignore)
-
-#check it the tag is valid besed on the hardcoded cradentials
-# login
 
 # user login view
 def login(request):
@@ -34,7 +24,7 @@ def login(request):
     else:
         form = AuthenticationForm()
         return render(request, 'login.html', {'form': form})
-    
+
 def logout(request):
     auth_logout(request)
     return redirect('login')
@@ -43,6 +33,7 @@ def logout(request):
 @login_required # only logged in users can access the dashboard
 def dashboard(request):
     carts = Cart.objects.select_related('current_location').all() #the carts and their current locations
+
     return render(request, 'dashboard.html', {
         'carts': carts,
         'locations': Location.objects.all(),
@@ -64,35 +55,33 @@ def get_all_carts(request):
     } for c in carts]})
 
 
-
-
 #Emanuel
 @login_required
 def filter_carts(request):
-    location_id = request.GET.get('location')
-    status      = request.GET.get('status')
-    sort        = request.GET.get('sort')
+    filter = request.GET.get('filter')
+
+    print(f"Filter: {filter}")
 
     carts = Cart.objects.select_related('current_location').all()
 
-    if location_id:
-        carts = carts.filter(current_location__id=location_id)
-    if status:
-        carts = carts.filter(status=status)
-    if sort == 'asc':
+    if filter == '30':
+        carts = carts.filter(last_seen__gte=timezone.now() - timedelta(minutes=30))
+    elif filter == '60':
+        carts = carts.filter(last_seen__gte=timezone.now() - timedelta(hours=1))
+    elif filter:
+        carts = carts.filter(current_location__name=filter)
+    
+    """if filter == 'asc':
         carts = carts.order_by('name')
-    elif sort == 'desc':
-        carts = carts.order_by('-name')
+    elif filter == 'desc':
+        carts = carts.order_by('-name')"""
 
     return JsonResponse({
         'carts': [{
-            'id':           c.id,
-            'name':         c.name,
-            'rfid_tag':     c.rfid_tag,
-            'status_raw':   c.status,               # "in_use"  → used for CSS class
-            'status_label': c.get_status_display(), # "In Use"  → used for display text
-            'location':     c.current_location.name if c.current_location else 'Unknown',
-            'last_seen':    c.last_seen.isoformat() if c.last_seen else None,
+            'id':               c.id,
+            'name':             c.name,
+            'location_raw':     c.current_location.name if c.current_location else 'Unknown',
+            'location_label': c.current_location.get_name_display() if c.current_location else 'Unknown',
+            'last_seen':        c.last_seen.isoformat() if c.last_seen else None,
         } for c in carts]
     })
-
