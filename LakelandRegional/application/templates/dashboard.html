@@ -110,7 +110,7 @@
             <td><strong>{{ cart.name }}</strong></td>
             <td><code>{{ cart.rfid_tag }}</code></td>
             <td><span class="badge-{{ cart.status }}">{{ cart.get_status_display }}</span></td>
-            <td>{{ cart.current_location.name|default:"Unknown" }}</td>
+            <td><span{{ cart.current_location.name|default:"Unknown" }}>{{ cart.current_location.get_name_display }}</span></td>
             <td>{{ cart.last_seen|date:"M d, Y  H:i" }}</td>
           </tr>
           {% empty %}
@@ -132,16 +132,16 @@
 
           <form id="filterForm">
               <div class="button-column">
-                <button name="location" value="hallway1">Hallway 1</button>
-                <button name="location" value="hallway2">Hallway 2</button>
-                <button name="location" value="hallway3">Hallway 3</button>
+                <button type="submit" name="location" value="hallway1">Hallway 1</button>
+                <button id="filterLocation" name="location" value="hallway2">Hallway 2</button>
+                <button id="filterLocation" name="location" value="hallway3">Hallway 3</button>
               </div>
 
               <div class="button-column">
-                <button name="location" value="washroom">Wash Room</button>
-                <button name="location" value="washhall">Wash Hall</button>
-                <button name="location" value="cleanroom">Clean Room</button>
-                <button name="location" value="storageroom">Storage Room</button>
+                <button id="filterLocation" name="location" value="washroom">Wash Room</button>
+                <button id="filterLocation" name="location" value="washhall">Wash Hall</button>
+                <button id="filterLocation" name="location" value="cleanroom">Clean Room</button>
+                <button id="filterLocation" name="location" value="storageroom">Storage Room</button>
               </div>
 
               <div class="button-column">
@@ -168,8 +168,10 @@
   document.getElementById("filterForm").onsubmit = async (e) => {
     e.preventDefault();
 
-    const formData = new FormData(e.target);
-    const params = new URLSearchParams(formData);
+    const formData = e.submitter;
+    
+    const params = new URLSearchParams();
+    if (formData) params.append("filter", formData.value);
 
     fetch(`/api/filter-carts/?${params}`)
       .then(r => r.json())
@@ -188,7 +190,7 @@
           <td><strong>${cart.name}</strong></td>
           <td><code>${cart.rfid_tag || ''}</code></td>
           <td><span class="badge-${cart.status_raw}">${cart.status_label}</span></td>
-          <td>${cart.location}</td>
+          <td><span${cart.location_raw}>${cart.location_label}</span></td>
           <td>${cart.last_seen ? new Date(cart.last_seen).toLocaleString() : ''}</td>
         `;
         tbody.appendChild(row);
