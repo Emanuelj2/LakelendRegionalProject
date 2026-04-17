@@ -10,17 +10,92 @@
     margin-bottom: 16px;
   }
 
-  .filter-btn {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 10px 14px;
-    cursor: pointer;
+  /* Main Content Frame Stylings */
+  .container {
+    user-select: none;
+    cursor: none;
+    display: flex;
+    flex-grow: 1;
+    gap: 16px;
+    padding: 16px;
+    height: calc(100vh - 80px);
+    overflow: hidden;
   }
 
+  .left-container {
+    flex: 1;
+    overflow: hidden; /* hide native scrollbar */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px
+  }
+
+  .right-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 60px;
+    padding: 0px 15px;
+  }
+
+  /* Filter and Reset Filter Buttons Stylings */
+  .filter-button {
+    background: #fff;
+    padding: 10px 14px;
+    border: none;
+    cursor: none;
+  }
+
+  button:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .reset-button {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 50px;
+    height: 70px;
+    width: 70px;
+    padding: 0px 0px 5px 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: none;
+  }
+
+  /* Custom Scrollbar Stylings */
+  .scrollbar {
+    display: flex;
+  }
+
+  .custom-scrollbar {
+    flex: 1;
+    width: 50px;
+    background: #e0e0e0;
+    border-radius: 6px;
+    position: relative;
+    cursor: none;
+  }
+
+  .scroll-thumb {
+    width: 50px;
+    background: #888;
+    border-radius: 6px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    cursor: grab;
+  }
+
+  /* Main Table Stylings */
   .cart-row {
     display: flex;
     align-items: center;
+    min-height: 150px;
     gap: 16px;
     background: #fff;
     border: 1px solid #e0e0e0;
@@ -31,35 +106,36 @@
 
   .cart-name {
     font-weight: 700;
-    font-size: 20px;
+    font-size: 30px;
     min-width: 110px;
   }
 
   .loc-badge {
-    padding: 8px 20px;
+    padding: 15px 20px;
     border-radius: 8px;
-    font-size: 18px;
+    font-size: 28px;
     font-weight: 500;
     flex: 1;
     text-align: center;
   }
 
- .loc-hallway1    { background: #B8C2CC; color: #2C2C2A; }
- .loc-hallway2    { background: #99ABBC; color: #2C2C2A; }
- .loc-hallway3    { background: #738597; color: #262624; }
- .loc-washroom    { background: #76B5F9; color: #0C447C; }
- .loc-washhall    { background: #4575F0; color: #041323; }
- .loc-cleanroom   { background: #DFC657; color: #222106; }
- .loc-storageroom { background: #F8B563; color: #2f1a03; }
+  .loc-hallway1    { background: #B8C2CC; color: #2C2C2A; }
+  .loc-hallway2    { background: #99ABBC; color: #2C2C2A; }
+  .loc-hallway3    { background: #738597; color: #262624; }
+  .loc-washroom    { background: #76B5F9; color: #0C447C; }
+  .loc-washhall    { background: #4575F0; color: #041323; }
+  .loc-cleanroom   { background: #DFC657; color: #222106; }
+  .loc-storageroom { background: #F8B563; color: #2f1a03; }
 
   .cart-time {
-    font-size: 18px;
+    font-size: 26px;
     color: #888;
     min-width: 160px;
     text-align: right;
     white-space: nowrap;
   }
 
+  /* Filter Overlay Stylings*/
   .overlay {
     position: fixed;
     inset: 0;
@@ -68,42 +144,48 @@
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    cursor: none;
   }
+  
   .hidden { display: none; }
 
   .filter-panel {
     background: #fff;
     border-radius: 12px;
     padding: 28px;
-    width: 480px;
-    max-width: 95vw;
+    width: 800px;
+    height: 500px;
+    max-width: 200vw;
+    max-height: 150vh;
   }
   .filter-title {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 22px;
+    font-size: 40px;
     font-weight: 700;
     margin: 0 0 20px;
   }
   .close-btn {
     background: none;
     border: none;
-    font-size: 22px;
-    cursor: pointer;
+    font-size: 50px;
+    cursor: none;
   }
+
   .filter-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 10px;
   }
+
   .fbtn {
-    padding: 14px 8px;
+    padding: 18px 8px;
     border-radius: 8px;
     border: none;
-    font-size: 14px;
+    font-size: 25px;
     font-weight: 500;
-    cursor: pointer;
+    cursor: none;
     text-align: center;
   }
  
@@ -112,33 +194,37 @@
   .fbtn.active { outline: 3px solid #333; }
 </style>
 
-<div class="container mt-4">
-
-  <!-- ── Filter Button top right ── -->
-  <div class="filter-button">
-    <button id="openFilter">
-      {% include 'filter-icon.svg.html' %}
-    </button>
-  </div>
+<div class="container">
 
   <!-- ── Cart List ── -->
-  <div id="cartList">
+  <div id="cartList" class="left-container">
     {% for cart in carts %}
     <div class="cart-row">
       <span class="cart-name">{{ cart.name }}</span>
       <span class="loc-badge loc-{{ cart.current_location.name|default:"unknown" }}">{{ cart.current_location.get_name_display }}</span>
       <span class="cart-time">
-      {{ cart.last_seen|date:"H:i:s" }} &nbsp; {{ cart.last_seen|date:"m/d/y" }}
+        {{ cart.last_seen|date:"H:i:s" }} &nbsp; {{ cart.last_seen|date:"m/d/y" }}
       </span>
     </div>
     {% empty %}
-    <p class="text-muted text-center py-4">
-      No carts found. Run <code>python manage.py seed_data</code> to add data.
-    </p>
+    <p class="text-muted text-center py-4">No carts found.</p>
     {% endfor %}
   </div>
 
+  <!-- ── Right Sidebar ── -->
+  <div class="right-container">
+    <button id="openFilter" class="filter-button">
+      {% include 'filter-icon.svg.html' %}
+    </button>
+
+    <button id="resetFilter" class="reset-button hidden">↺</button>
+
+    <div class="custom-scrollbar" id="customScrollbar">
+      <div class="scroll-thumb" id="scrollThumb"></div>
+    </div>
+  </div>
 </div>
+
 
 <!-- ── Filter Overlay ── -->
 <div id="filterOverlay" class="overlay hidden">
@@ -171,6 +257,58 @@
 
 <script>
   const overlay = document.getElementById("filterOverlay");
+  const cartList = document.getElementById("cartList");
+  const scrollbar = document.getElementById("customScrollbar");
+  const thumb = document.getElementById("scrollThumb");
+
+  // ── Scrollbar logic ──
+  function updateThumb() {
+    const scrollRatio = cartList.scrollTop / (cartList.scrollHeight - cartList.clientHeight);
+    const thumbHeight = Math.max(30, (cartList.clientHeight / cartList.scrollHeight) * scrollbar.clientHeight);
+    const thumbTop = scrollRatio * (scrollbar.clientHeight - thumbHeight);
+    thumb.style.height = thumbHeight + "px";
+    thumb.style.top = thumbTop + "px";
+  }
+
+  cartList.addEventListener("scroll", updateThumb);
+  window.addEventListener("resize", updateThumb);
+  updateThumb();
+
+  // Drag thumb to scroll
+  let dragging = false, startY = 0, startScrollTop = 0;
+
+  function startDrag(clientY) {
+    dragging = true;
+    startY = clientY;
+    startScrollTop = cartList.scrollTop;
+    thumb.style.cursor = "grabbing";
+  }
+
+  function moveDrag(clientY) {
+    if (!dragging) return;
+    const delta = clientY - startY;
+    const thumbHeight = thumb.offsetHeight;
+    const maxTop = scrollbar.clientHeight - thumbHeight;
+    const scrollRatio = delta / maxTop;
+    cartList.scrollTop = Math.max(0, startScrollTop + scrollRatio * (cartList.scrollHeight - cartList.clientHeight));
+  }
+
+  function endDrag() {
+    dragging = false;
+    thumb.style.cursor = "grab";
+  }
+
+  // Mouse events
+  thumb.addEventListener("mousedown",  (e) => startDrag(e.clientY));
+  document.addEventListener("mousemove", (e) => moveDrag(e.clientY));
+  document.addEventListener("mouseup",   () => endDrag());
+
+  // Touch events
+  thumb.addEventListener("touchstart", (e) => startDrag(e.touches[0].clientY));
+  document.addEventListener("touchmove", (e) => { moveDrag(e.touches[0].clientY); e.preventDefault(); }, { passive: false });
+  document.addEventListener("touchend",  () => endDrag());
+
+  //  ── Filter logic ──
   document.getElementById("openFilter").onclick = () => overlay.classList.remove("hidden");
   document.getElementById("closeFilter").onclick = () => overlay.classList.add("hidden");
 
@@ -182,7 +320,24 @@
 
     if (submitter) params.append("filter", submitter.value);
 
-    fetch(`/api/filter-carts/?${params}`)
+    overlay.classList.add("hidden");
+    resetFilter.classList.remove("hidden");
+
+    applyFilter(params);
+  };
+
+  document.getElementById("resetFilter").onclick = async () => {
+    const params = new URLSearchParams();
+    params.append("filter", "");
+
+    applyFilter();
+
+    document.getElementById("resetFilter").classList.add("hidden");
+  }
+  
+  function applyFilter(parameters)
+  {
+    fetch(`/api/filter-carts/?${parameters}`)
       .then(r => r.json())
       .then(data => {
         const cartList = document.getElementById("cartList");
@@ -190,6 +345,10 @@
 
         if (!data.carts.length) {
           cartList.innerHTML = `<p class="text-muted text-center py-4">No carts found.</p>`;
+          
+          // Reset the Scroll Thumb position to top of scroll bar
+          cartList.scrollTop = 0;
+          updateThumb();
           return;
         }
 
@@ -208,10 +367,15 @@
           `;
           cartList.appendChild(div);
         });
-      })
-      .catch(err => console.error("Filter error:", err));
 
-    overlay.classList.add("hidden");
-  };
+        // Reset the Scroll Thumb position to top of scroll bar
+        cartList.scrollTop = 0;
+        updateThumb();
+        return;
+      })
+
+      .catch(err => console.error("Filter error:", err));
+  }
+
 </script>
 {% endblock %}
